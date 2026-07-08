@@ -1,0 +1,33 @@
+# Default configuration for chaser-runner.
+# Override any subset of these keys in your own YAML and pass it with --config.
+
+env:
+  world_size: 800.0      # size of the square (wrap-around) world
+  tickrate: 60           # physics steps per second (dt = 1 / tickrate)
+  max_acc: 300.0         # max acceleration an action of magnitude 1 produces
+  max_speed: 250.0       # speed cap applied to both agents
+  friction: 0.1          # velocity damping per second
+  capture_radius: 20.0   # chaser wins when within this distance
+  timeout_steps: 1000    # episode ends (runner "wins") after this many steps
+
+agent:
+  hidden: 256            # width of the Q-network hidden layers
+  lr: 0.0001
+  gamma: 0.99
+  sample_actions: 128    # candidate actions scored when acting
+  batch_size: 128
+  buffer_capacity: 200000
+  target_update_freq: 400
+  target_samples: 32     # candidate actions used to estimate the Bellman max
+  grad_clip: 10.0
+  min_buffer: 1000       # start learning only after this many transitions
+
+train:
+  total_steps: 200000
+  train_iters_per_step: 2
+  eps_start: 0.3
+  eps_final: 0.02
+  eps_decay_steps: 20000
+  log_interval: 100
+  save_interval: 5000
+  seed: 0

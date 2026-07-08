@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chaser-runner"
+version = "0.1.0"
+description = "Adversarial self-play reinforcement learning: a chaser and a runner learn to pursue and evade on a toroidal 2D world."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Kuanysh" }]
+keywords = ["reinforcement-learning", "self-play", "dqn", "pytorch", "pursuit-evasion"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.24",
+    "torch>=2.0",
+    "pygame>=2.5",
+    "pyyaml>=6.0",
+    "tensorboard>=2.14",
+    "imageio>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.4",
+    "black>=24.0",
+    "pre-commit>=3.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/kuanysh/chaser-runner"
+Repository = "https://github.com/kuanysh/chaser-runner"
+
+[project.scripts]
+chaser-runner = "chaser_runner.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]

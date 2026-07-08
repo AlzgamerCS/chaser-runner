@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.qodo/
+
+# Training artifacts
+runs/            # TensorBoard logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Keep the shipped demo assets and the baseline models tracked; ignore ad-hoc ones.
+models/*.pth
+!models/chaser_q.pth
+!models/runner_q.pth
