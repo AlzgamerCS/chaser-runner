@@ -11,6 +11,27 @@ def test_reset_state_shape():
     assert state.dtype == np.float32
 
 
+def test_state_is_relative_and_normalized():
+    env = ChaseEnv()
+    state = env.reset(seed=0)
+    # Relative displacement components live in [-1, 1] and velocities are small.
+    assert np.all(np.abs(state) <= 1.0 + 1e-6)
+
+
+def test_state_is_translation_invariant():
+    # Shifting both agents by the same offset (mod world) must not change the
+    # relative state -- the whole point of the relative encoding.
+    cfg = EnvConfig(world_size=100.0)
+    env = ChaseEnv(cfg)
+    env.reset(seed=0)
+    s1 = env._get_state()
+    offset = np.array([37.0, 91.0])
+    env.ch_pos = env._wrap(env.ch_pos + offset)
+    env.rn_pos = env._wrap(env.rn_pos + offset)
+    s2 = env._get_state()
+    np.testing.assert_allclose(s1, s2, atol=1e-5)
+
+
 def test_step_shapes_and_types():
     env = ChaseEnv()
     env.reset(seed=1)

@@ -16,14 +16,15 @@ env/
 .qodo/
 
 # Training artifacts
-runs/            # TensorBoard logs
+# (.gitignore has no inline comments — keep patterns on their own lines)
+runs/
 *.log
+# Trained model weights: retrainable, not versioned
+*.pth
 
 # OS / editor
 .DS_Store
 Thumbs.db
 
-# Keep the shipped demo assets and the baseline models tracked; ignore ad-hoc ones.
-models/*.pth
-!models/chaser_q.pth
-!models/runner_q.pth
+# Personal working notes, not for the repo
+CLAUDE.md

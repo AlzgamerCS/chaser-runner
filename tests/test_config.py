@@ -27,7 +27,8 @@ def test_from_dict_partial_override():
 def test_default_yaml_loads():
     cfg = load_config(CONFIG_PATH)
     assert isinstance(cfg, Config)
-    assert cfg.env.capture_radius == 20.0
+    assert cfg.env.capture_radius == 25.0
+    assert cfg.env.chaser_advantage == 1.2
 
 
 def test_flat_view():

@@ -5,9 +5,10 @@ env:
   world_size: 800.0      # size of the square (wrap-around) world
   tickrate: 60           # physics steps per second (dt = 1 / tickrate)
   max_acc: 300.0         # max acceleration an action of magnitude 1 produces
-  max_speed: 250.0       # speed cap applied to both agents
+  max_speed: 250.0       # runner speed cap
+  chaser_advantage: 1.2  # chaser's speed/accel multiplier (>1 makes capture possible)
   friction: 0.1          # velocity damping per second
-  capture_radius: 20.0   # chaser wins when within this distance
+  capture_radius: 25.0   # chaser wins when within this distance
   timeout_steps: 1000    # episode ends (runner "wins") after this many steps
 
 agent:

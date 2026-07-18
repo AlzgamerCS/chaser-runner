@@ -39,15 +39,18 @@ surprisingly natural chasing and juking behaviour.
 pip install torch            # or the CUDA build for your platform
 pip install -e ".[dev]"
 
-# 2. Watch the pre-trained agents in a live window
-chaser-runner play --fullscreen
-
-# 3. Train your own from scratch (Ctrl+C any time — models are saved on exit)
+# 2. Train from scratch (Ctrl+C any time — models are saved on exit)
 chaser-runner train --steps 200000
+
+# 3. Watch the trained agents in a live window
+chaser-runner play --fullscreen
 
 # 4. See how good they are
 chaser-runner eval --episodes 50
 ```
+
+> Trained weights are not checked into the repo — run `train` first (it writes
+> `models/chaser_q.pth` and `models/runner_q.pth`), which `play`/`eval` then load.
 
 > **GPU:** training auto-detects CUDA. Pass `--device cpu` to force CPU.
 
@@ -108,12 +111,20 @@ This uses SDL's dummy video driver, so it works over SSH, in Docker, and in CI.
              └──────────────┘                 └──────────────┘
 ```
 
-**State** (8-dim): `[chaser_pos(2), chaser_vel(2), runner_pos(2), runner_vel(2)]`.
+**State** (6-dim, relative & normalized): `[rel_disp(2), chaser_vel(2),
+runner_vel(2)]`, where `rel_disp` is the shortest wrap-around vector from chaser to
+runner. On a homogeneous toroidal world only *relative* geometry matters, so
+absolute position is deliberately dropped and every component is scaled to roughly
+`[-1, 1]` — this is what makes the task learnable.
 
 **Reward** is zero-sum on the shaped distance term: the chaser earns
 `(prev_dist − dist) / world_size` each step, the runner earns its negation. Capture
 adds `+1` for the chaser and `−1` for the runner and ends the episode; reaching the
 step limit ends it as a runner "win".
+
+**Game balance.** The chaser is slightly faster (`env.chaser_advantage`, default
+`1.2`). Equal speed on a torus makes a competent runner *uncatchable*, so the
+chaser needs an edge to ever learn to win.
 
 **Learning.** Each agent is an independent [`DQNAgent`](src/chaser_runner/agent.py)
 with its own replay buffer and target network. Since actions are continuous, both
@@ -161,7 +172,7 @@ docker run --rm -v "$PWD/assets:/app/assets" chaser-runner record --out assets/d
 
 ## Roadmap ideas
 
-- Relative / normalized state encoding for faster, more transferable learning
+- Egocentric per-agent state (each agent sees the world from its own frame)
 - Prioritized experience replay; DDPG/TD3-style deterministic actors
 - Multiple chasers or runners (team pursuit-evasion)
 - Optional MLflow backend behind the existing `MetricLogger` interface

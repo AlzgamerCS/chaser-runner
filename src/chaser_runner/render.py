@@ -51,9 +51,11 @@ class Renderer:
             self._clock = None
         else:
             pygame.display.init()
+            # SCALED lets us render at a fixed square size and letterbox-scale it
+            # to the display; a (0, 0) size is invalid with SCALED, so always pass
+            # the explicit render size.
             flags = pygame.FULLSCREEN | pygame.SCALED if fullscreen else 0
-            size = (0, 0) if fullscreen else (width, height)
-            self.surface = pygame.display.set_mode(size, flags)
+            self.surface = pygame.display.set_mode((width, height), flags)
             pygame.display.set_caption("Chaser-Runner")
             self._clock = pygame.time.Clock()
 

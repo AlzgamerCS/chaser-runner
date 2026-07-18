@@ -14,7 +14,9 @@ import numpy as np
 
 from chaser_runner.config import EnvConfig
 
-STATE_DIM = 8
+# State: [rel_disp(2), chaser_vel(2), runner_vel(2)], all normalized. See
+# ChaseEnv._get_state for the rationale behind the relative encoding.
+STATE_DIM = 6
 ACTION_DIM = 2
 
 
@@ -66,7 +68,8 @@ class ChaseEnv:
         self.steps += 1
         cfg = self.cfg
 
-        acc_ch = np.clip(action_chaser, -1.0, 1.0).astype(float) * cfg.max_acc
+        adv = cfg.chaser_advantage
+        acc_ch = np.clip(action_chaser, -1.0, 1.0).astype(float) * cfg.max_acc * adv
         acc_rn = np.clip(action_runner, -1.0, 1.0).astype(float) * cfg.max_acc
 
         self.ch_vel = self.ch_vel + acc_ch * cfg.dt
@@ -75,8 +78,8 @@ class ChaseEnv:
         self.ch_vel *= 1.0 - cfg.friction * cfg.dt
         self.rn_vel *= 1.0 - cfg.friction * cfg.dt
 
-        self.ch_vel = self._clip_speed(self.ch_vel)
-        self.rn_vel = self._clip_speed(self.rn_vel)
+        self.ch_vel = self._clip_speed(self.ch_vel, cfg.max_speed * adv)
+        self.rn_vel = self._clip_speed(self.rn_vel, cfg.max_speed)
 
         self.ch_pos = self._wrap(self.ch_pos + self.ch_vel * cfg.dt)
         self.rn_pos = self._wrap(self.rn_pos + self.rn_vel * cfg.dt)
@@ -117,16 +120,30 @@ class ChaseEnv:
         d = (d + size / 2.0) % size - size / 2.0
         return d
 
-    def _clip_speed(self, vel: np.ndarray) -> np.ndarray:
+    def _clip_speed(self, vel: np.ndarray, max_speed: float) -> np.ndarray:
         speed = float(np.linalg.norm(vel))
-        if speed > self.cfg.max_speed:
-            return vel * (self.cfg.max_speed / speed)
+        if speed > max_speed:
+            return vel * (max_speed / speed)
         return vel
 
     def _get_state(self) -> np.ndarray:
-        return np.concatenate([self.ch_pos, self.ch_vel, self.rn_pos, self.rn_vel]).astype(
-            np.float32
-        )
+        """Relative, normalized state (all components roughly in ``[-1, 1]``).
+
+        On a homogeneous wrap-around world only *relative* geometry matters, so
+        we feed the shortest chaser->runner displacement rather than absolute
+        positions. Everything is normalized so the network sees well-scaled
+        inputs, which is what makes the problem learnable.
+        """
+        half = self.cfg.world_size / 2.0
+        ms = self.cfg.max_speed
+        disp = self._torus_vector(self.ch_pos, self.rn_pos)
+        return np.concatenate(
+            [
+                disp / half,  # where the runner is, relative to the chaser
+                self.ch_vel / ms,  # chaser's own velocity
+                self.rn_vel / ms,  # runner's own velocity
+            ]
+        ).astype(np.float32)
 
     @property
     def distance(self) -> float:

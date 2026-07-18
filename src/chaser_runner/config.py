@@ -21,8 +21,12 @@ class EnvConfig:
     tickrate: int = 60
     max_acc: float = 300.0
     max_speed: float = 250.0
+    # The chaser is this much faster/nimbler than the runner. With equal speed a
+    # competent runner is uncatchable on a torus, so the chaser never learns to
+    # win; a small advantage makes capture achievable.
+    chaser_advantage: float = 1.2
     friction: float = 0.1
-    capture_radius: float = 20.0
+    capture_radius: float = 25.0
     timeout_steps: int = 1000
 
     @property
