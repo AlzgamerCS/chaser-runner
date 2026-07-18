@@ -23,6 +23,7 @@ dependencies = [
     "pyyaml>=6.0",
     "tensorboard>=2.14",
     "imageio>=2.31",
+    "tqdm>=4.65",
 ]
 
 [project.optional-dependencies]

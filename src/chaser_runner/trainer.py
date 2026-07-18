@@ -9,6 +9,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from tqdm import tqdm
 
 from chaser_runner.agent import DQNAgent
 from chaser_runner.config import Config
@@ -85,9 +86,18 @@ class Trainer:
         losses = {"chaser": deque(maxlen=200), "runner": deque(maxlen=200)}
         ep_reward = {"chaser": 0.0, "runner": 0.0}
         episodes = 0
+        captures = 0
 
+        # Live progress bar with a running steps/sec rate and ETA to completion.
+        pbar = tqdm(
+            total=cfg.train.total_steps,
+            desc="training",
+            unit="step",
+            dynamic_ncols=True,
+        )
         try:
             for step in range(1, cfg.train.total_steps + 1):
+                pbar.update(1)
                 eps = self._epsilon(step)
                 act_ch = self.chaser.select_action(state, explore_eps=eps)
                 act_rn = self.runner.select_action(state, explore_eps=eps)
@@ -135,24 +145,33 @@ class Trainer:
 
                 if done:
                     episodes += 1
+                    captured = info.get("reason") == "captured"
+                    captures += int(captured)
                     self.logger.log_scalars(
                         "episode",
                         {
                             "reward_chaser": ep_reward["chaser"],
                             "reward_runner": ep_reward["runner"],
                             "length": self.env.steps,
-                            "captured": 1.0 if info.get("reason") == "captured" else 0.0,
+                            "captured": 1.0 if captured else 0.0,
                         },
                         step,
                     )
-                    print(
+                    # tqdm.write keeps these lines from corrupting the progress bar.
+                    tqdm.write(
                         f"[step {step}] episode {episodes} {info.get('reason')} "
                         f"len={self.env.steps} "
                         f"R_ch={ep_reward['chaser']:.3f} R_rn={ep_reward['runner']:.3f}"
                     )
+                    pbar.set_postfix(
+                        ep=episodes,
+                        captures=f"{captures}/{episodes}",
+                        last_len=self.env.steps,
+                    )
                     state = self.env.reset()
                     ep_reward = {"chaser": 0.0, "runner": 0.0}
         finally:
+            pbar.close()
             self.save()
             self.logger.close()
 
