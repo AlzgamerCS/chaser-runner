@@ -59,7 +59,7 @@ def test_seed_determinism():
 
 
 def test_positions_wrap_within_world():
-    env = ChaseEnv(EnvConfig(world_size=100.0, max_speed=500.0, max_acc=500.0))
+    env = ChaseEnv(EnvConfig(world_size=100.0, max_speed=500.0, max_acc=500.0, capture_radius=0))
     env.reset(seed=3)
     a = np.ones(ACTION_DIM)
     for _ in range(200):
@@ -84,9 +84,41 @@ def test_capture_terminates_episode():
 
 
 def test_timeout_terminates_episode():
-    env = ChaseEnv(EnvConfig(capture_radius=0.0, timeout_steps=3))
+    env = ChaseEnv(EnvConfig(capture_radius=0.0, timeout_steps=3, action_repeat=1))
     env.reset(seed=5)
     done = False
     for _ in range(3):
         _, _, done, info = env.step(np.zeros(ACTION_DIM), np.zeros(ACTION_DIM))
     assert done and info["reason"] == "timeout"
+
+
+def test_scripted_pursuit_and_evasion_use_correct_relative_direction():
+    from chaser_runner.evaluation import BaselinePolicy
+
+    cfg = EnvConfig()
+    # Runner is to the right; chase right, flee right, not toward the chaser.
+    state = np.array([0.5, 0, 0, 0, 0, 0], dtype=np.float32)
+    assert BaselinePolicy("chaser", cfg).select_action(state)[0] > 0
+    assert BaselinePolicy("runner", cfg).select_action(state)[0] > 0
+
+
+def test_action_repeat_stops_at_timeout_and_reports_truncation():
+    env = ChaseEnv(EnvConfig(action_repeat=4, timeout_steps=3, capture_radius=0))
+    env.reset(seed=0)
+    _, _, done, info = env.step(np.zeros(2), np.zeros(2))
+    assert done and env.steps == 3
+    assert info["truncated"] and not info["terminated"]
+
+
+def test_environment_rejects_steps_after_capture_and_nonfinite_actions():
+    import pytest
+
+    env = ChaseEnv(EnvConfig(capture_radius=1e9))
+    env.reset(seed=4)
+    _, _, done, _ = env.step(np.zeros(2), np.zeros(2))
+    assert done
+    with pytest.raises(RuntimeError, match="Reset"):
+        env.step(np.zeros(2), np.zeros(2))
+    env.reset(seed=4)
+    with pytest.raises(ValueError, match="finite"):
+        env.step(np.array([np.nan, 0]), np.zeros(2))

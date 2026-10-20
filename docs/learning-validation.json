@@ -1,0 +1,492 @@
+{
+  "episodes": 100,
+  "seed": 20000,
+  "runs": [
+    {
+      "run": "runs\\validated-seed0",
+      "training_seed": 0,
+      "training_steps": 50000,
+      "config": {
+        "env": {
+          "world_size": 800.0,
+          "tickrate": 60,
+          "max_acc": 300.0,
+          "max_speed": 250.0,
+          "chaser_advantage": 1.2,
+          "friction": 0.1,
+          "capture_radius": 25.0,
+          "timeout_steps": 1000,
+          "action_repeat": 4,
+          "distance_reward_scale": 100.0,
+          "capture_reward": 10.0
+        },
+        "agent": {
+          "algorithm": "td3",
+          "hidden": 128,
+          "lr": 0.0003,
+          "gamma": 0.99,
+          "sample_actions": 128,
+          "batch_size": 128,
+          "buffer_capacity": 50000,
+          "target_update_freq": 400,
+          "target_samples": 32,
+          "grad_clip": 10.0,
+          "min_buffer": 1000,
+          "start_steps": 1000,
+          "tau": 0.005,
+          "policy_delay": 2,
+          "policy_noise": 0.2,
+          "noise_clip": 0.5
+        },
+        "train": {
+          "total_steps": 50000,
+          "train_iters_per_step": 1,
+          "eps_start": 0.3,
+          "eps_final": 0.05,
+          "eps_decay_steps": 100000,
+          "log_interval": 100,
+          "save_interval": 5000,
+          "seed": 0,
+          "eval_interval": 10000,
+          "eval_episodes": 20,
+          "eval_seed": 10000,
+          "snapshot_interval": 2000,
+          "opponent_pool_size": 8,
+          "random_opponent_prob": 0.2,
+          "scripted_opponent_prob": 0.3,
+          "keep_checkpoints": 3,
+          "torch_threads": 1
+        }
+      },
+      "untrained": {
+        "paired": {
+          "episodes": 100,
+          "capture_rate": 0.0,
+          "avg_length": 1000.0,
+          "avg_reward_chaser": -1.8017131210534698,
+          "avg_reward_runner": 1.8017131210534698,
+          "avg_distance": 343.1335020687672,
+          "capture_ci_low": 0.0,
+          "capture_ci_high": 0.03699480747600191,
+          "survival_rate": 1.0
+        },
+        "chaser_vs_scripted": {
+          "episodes": 100,
+          "capture_rate": 0.0,
+          "avg_length": 1000.0,
+          "avg_reward_chaser": -24.360328062439468,
+          "avg_reward_runner": 24.360328062439468,
+          "avg_distance": 512.2376308832044,
+          "capture_ci_low": 0.0,
+          "capture_ci_high": 0.03699480747600191,
+          "survival_rate": 1.0
+        },
+        "scripted_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 1.0,
+          "avg_length": 86.4,
+          "avg_reward_chaser": 49.088236871055095,
+          "avg_reward_runner": -49.088236871055095,
+          "avg_distance": 199.43516687599367,
+          "capture_ci_low": 0.9630051925239981,
+          "capture_ci_high": 0.9999999999999999,
+          "survival_rate": 0.0
+        },
+        "chaser_vs_random": {
+          "episodes": 100,
+          "capture_rate": 0.15,
+          "avg_length": 942.21,
+          "avg_reward_chaser": 7.76920931658523,
+          "avg_reward_runner": -7.76920931658523,
+          "avg_distance": 304.92590172801863,
+          "capture_ci_low": 0.09305903191162297,
+          "capture_ci_high": 0.23283733332157835,
+          "survival_rate": 0.85
+        },
+        "random_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.13,
+          "avg_length": 956.16,
+          "avg_reward_chaser": 10.27670726197427,
+          "avg_reward_runner": -10.27670726197427,
+          "avg_distance": 318.7988421301554,
+          "capture_ci_low": 0.07757093858414264,
+          "capture_ci_high": 0.20980521894809878,
+          "survival_rate": 0.87
+        }
+      },
+      "latest": {
+        "paired": {
+          "episodes": 100,
+          "capture_rate": 0.21,
+          "avg_length": 853.84,
+          "avg_reward_chaser": 34.82587403894087,
+          "avg_reward_runner": -34.82587403894087,
+          "avg_distance": 140.41227304587704,
+          "capture_ci_low": 0.14165549531645788,
+          "capture_ci_high": 0.2998014930196232,
+          "survival_rate": 0.79
+        },
+        "chaser_vs_scripted": {
+          "episodes": 100,
+          "capture_rate": 0.83,
+          "avg_length": 717.41,
+          "avg_reward_chaser": 45.706580667086094,
+          "avg_reward_runner": -45.706580667086094,
+          "avg_distance": 148.33314748047775,
+          "capture_ci_low": 0.7445181876635703,
+          "capture_ci_high": 0.8910652394022684,
+          "survival_rate": 0.17000000000000004
+        },
+        "scripted_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 1.0,
+          "avg_length": 382.0,
+          "avg_reward_chaser": 48.860802689770225,
+          "avg_reward_runner": -48.860802689770225,
+          "avg_distance": 164.3609450125681,
+          "capture_ci_low": 0.9630051925239981,
+          "capture_ci_high": 0.9999999999999999,
+          "survival_rate": 0.0
+        },
+        "chaser_vs_random": {
+          "episodes": 100,
+          "capture_rate": 0.57,
+          "avg_length": 632.42,
+          "avg_reward_chaser": 40.733407538156314,
+          "avg_reward_runner": -40.733407538156314,
+          "avg_distance": 121.5080474704259,
+          "capture_ci_low": 0.4721521169586435,
+          "capture_ci_high": 0.6626686099947162,
+          "survival_rate": 0.43000000000000005
+        },
+        "random_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.0,
+          "avg_length": 1000.0,
+          "avg_reward_chaser": -12.694572387277152,
+          "avg_reward_runner": 12.694572387277152,
+          "avg_distance": 435.0296539813988,
+          "capture_ci_low": 0.0,
+          "capture_ci_high": 0.03699480747600191,
+          "survival_rate": 1.0
+        }
+      },
+      "selected_steps": {
+        "chaser": 30000,
+        "runner": 20000
+      },
+      "selected": {
+        "paired": {
+          "episodes": 100,
+          "capture_rate": 0.65,
+          "avg_length": 647.12,
+          "avg_reward_chaser": 35.3055696272166,
+          "avg_reward_runner": -35.3055696272166,
+          "avg_distance": 238.2634501025541,
+          "capture_ci_low": 0.5525426042919797,
+          "capture_ci_high": 0.7363589534652197,
+          "survival_rate": 0.35
+        },
+        "chaser_vs_scripted": {
+          "episodes": 100,
+          "capture_rate": 1.0,
+          "avg_length": 480.16,
+          "avg_reward_chaser": 48.815469352834505,
+          "avg_reward_runner": -48.815469352834505,
+          "avg_distance": 202.23253467151272,
+          "capture_ci_low": 0.9630051925239981,
+          "capture_ci_high": 0.9999999999999999,
+          "survival_rate": 0.0
+        },
+        "scripted_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.52,
+          "avg_length": 695.13,
+          "avg_reward_chaser": 41.7012968469339,
+          "avg_reward_runner": -41.7012968469339,
+          "avg_distance": 144.99735659971253,
+          "capture_ci_low": 0.4231640509017654,
+          "capture_ci_high": 0.6153561567991945,
+          "survival_rate": 0.48
+        },
+        "chaser_vs_random": {
+          "episodes": 100,
+          "capture_rate": 0.85,
+          "avg_length": 341.76,
+          "avg_reward_chaser": 45.28930696443243,
+          "avg_reward_runner": -45.28930696443243,
+          "avg_distance": 139.1393249125997,
+          "capture_ci_low": 0.7671626666784216,
+          "capture_ci_high": 0.906940968088377,
+          "survival_rate": 0.15000000000000002
+        },
+        "random_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.0,
+          "avg_length": 1000.0,
+          "avg_reward_chaser": -19.895733542227802,
+          "avg_reward_runner": 19.895733542227802,
+          "avg_distance": 485.0982929965543,
+          "capture_ci_low": 0.0,
+          "capture_ci_high": 0.03699480747600191,
+          "survival_rate": 1.0
+        }
+      },
+      "scripted_pair": {
+        "episodes": 100,
+        "capture_rate": 1.0,
+        "avg_length": 404.42,
+        "avg_reward_chaser": 48.839294584269275,
+        "avg_reward_runner": -48.839294584269275,
+        "avg_distance": 186.01503195491975,
+        "capture_ci_low": 0.9630051925239981,
+        "capture_ci_high": 0.9999999999999999,
+        "survival_rate": 0.0
+      }
+    },
+    {
+      "run": "runs\\validated-seed1",
+      "training_seed": 1,
+      "training_steps": 50000,
+      "config": {
+        "env": {
+          "world_size": 800.0,
+          "tickrate": 60,
+          "max_acc": 300.0,
+          "max_speed": 250.0,
+          "chaser_advantage": 1.2,
+          "friction": 0.1,
+          "capture_radius": 25.0,
+          "timeout_steps": 1000,
+          "action_repeat": 4,
+          "distance_reward_scale": 100.0,
+          "capture_reward": 10.0
+        },
+        "agent": {
+          "algorithm": "td3",
+          "hidden": 128,
+          "lr": 0.0003,
+          "gamma": 0.99,
+          "sample_actions": 128,
+          "batch_size": 128,
+          "buffer_capacity": 50000,
+          "target_update_freq": 400,
+          "target_samples": 32,
+          "grad_clip": 10.0,
+          "min_buffer": 1000,
+          "start_steps": 1000,
+          "tau": 0.005,
+          "policy_delay": 2,
+          "policy_noise": 0.2,
+          "noise_clip": 0.5
+        },
+        "train": {
+          "total_steps": 50000,
+          "train_iters_per_step": 1,
+          "eps_start": 0.3,
+          "eps_final": 0.05,
+          "eps_decay_steps": 100000,
+          "log_interval": 100,
+          "save_interval": 5000,
+          "seed": 1,
+          "eval_interval": 10000,
+          "eval_episodes": 20,
+          "eval_seed": 10000,
+          "snapshot_interval": 2000,
+          "opponent_pool_size": 8,
+          "random_opponent_prob": 0.2,
+          "scripted_opponent_prob": 0.3,
+          "keep_checkpoints": 3,
+          "torch_threads": 1
+        }
+      },
+      "untrained": {
+        "paired": {
+          "episodes": 100,
+          "capture_rate": 0.0,
+          "avg_length": 1000.0,
+          "avg_reward_chaser": -0.04229792326803097,
+          "avg_reward_runner": 0.04229792326803097,
+          "avg_distance": 336.7888814589029,
+          "capture_ci_low": 0.0,
+          "capture_ci_high": 0.03699480747600191,
+          "survival_rate": 1.0
+        },
+        "chaser_vs_scripted": {
+          "episodes": 100,
+          "capture_rate": 0.0,
+          "avg_length": 1000.0,
+          "avg_reward_chaser": -24.52659287671281,
+          "avg_reward_runner": 24.52659287671281,
+          "avg_distance": 512.6794969853365,
+          "capture_ci_low": 0.0,
+          "capture_ci_high": 0.03699480747600191,
+          "survival_rate": 1.0
+        },
+        "scripted_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 1.0,
+          "avg_length": 86.34,
+          "avg_reward_chaser": 49.0796376591,
+          "avg_reward_runner": -49.0796376591,
+          "avg_distance": 199.51760500160327,
+          "capture_ci_low": 0.9630051925239981,
+          "capture_ci_high": 0.9999999999999999,
+          "survival_rate": 0.0
+        },
+        "chaser_vs_random": {
+          "episodes": 100,
+          "capture_rate": 0.12,
+          "avg_length": 951.13,
+          "avg_reward_chaser": 6.192080020467001,
+          "avg_reward_runner": -6.192080020467001,
+          "avg_distance": 304.03731372746967,
+          "capture_ci_low": 0.06999337365267776,
+          "capture_ci_high": 0.19812268002908368,
+          "survival_rate": 0.88
+        },
+        "random_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.11,
+          "avg_length": 965.92,
+          "avg_reward_chaser": 8.054476032777481,
+          "avg_reward_runner": -8.054476032777481,
+          "avg_distance": 316.24790137189035,
+          "capture_ci_low": 0.06254131955225126,
+          "capture_ci_high": 0.18631463027903022,
+          "survival_rate": 0.89
+        }
+      },
+      "latest": {
+        "paired": {
+          "episodes": 100,
+          "capture_rate": 0.17,
+          "avg_length": 861.38,
+          "avg_reward_chaser": 27.370596177678884,
+          "avg_reward_runner": -27.370596177678884,
+          "avg_distance": 178.5578485087083,
+          "capture_ci_low": 0.10893476059773155,
+          "capture_ci_high": 0.25548181233642975,
+          "survival_rate": 0.83
+        },
+        "chaser_vs_scripted": {
+          "episodes": 100,
+          "capture_rate": 0.74,
+          "avg_length": 637.4,
+          "avg_reward_chaser": 44.6483291884701,
+          "avg_reward_runner": -44.6483291884701,
+          "avg_distance": 177.29697371706658,
+          "capture_ci_low": 0.6462882736813838,
+          "capture_ci_high": 0.8159542187301354,
+          "survival_rate": 0.26
+        },
+        "scripted_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 1.0,
+          "avg_length": 372.37,
+          "avg_reward_chaser": 48.853571631542444,
+          "avg_reward_runner": -48.853571631542444,
+          "avg_distance": 159.18785528872067,
+          "capture_ci_low": 0.9630051925239981,
+          "capture_ci_high": 0.9999999999999999,
+          "survival_rate": 0.0
+        },
+        "chaser_vs_random": {
+          "episodes": 100,
+          "capture_rate": 0.61,
+          "avg_length": 640.44,
+          "avg_reward_chaser": 34.45640736370242,
+          "avg_reward_runner": -34.45640736370242,
+          "avg_distance": 220.46792020946495,
+          "capture_ci_low": 0.5120283616749817,
+          "capture_ci_high": 0.699832780680298,
+          "survival_rate": 0.39
+        },
+        "random_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.07,
+          "avg_length": 977.97,
+          "avg_reward_chaser": -6.816793970879825,
+          "avg_reward_runner": 6.816793970879825,
+          "avg_distance": 416.5337485784268,
+          "capture_ci_low": 0.034318824364064096,
+          "capture_ci_high": 0.13749671006529757,
+          "survival_rate": 0.9299999999999999
+        }
+      },
+      "selected_steps": {
+        "chaser": 30000,
+        "runner": 20000
+      },
+      "selected": {
+        "paired": {
+          "episodes": 100,
+          "capture_rate": 1.0,
+          "avg_length": 291.68,
+          "avg_reward_chaser": 48.90102867662985,
+          "avg_reward_runner": -48.90102867662985,
+          "avg_distance": 185.84286547373893,
+          "capture_ci_low": 0.9630051925239981,
+          "capture_ci_high": 0.9999999999999999,
+          "survival_rate": 0.0
+        },
+        "chaser_vs_scripted": {
+          "episodes": 100,
+          "capture_rate": 0.96,
+          "avg_length": 540.62,
+          "avg_reward_chaser": 48.009898791046446,
+          "avg_reward_runner": -48.009898791046446,
+          "avg_distance": 174.78430146361265,
+          "capture_ci_low": 0.9016278276739262,
+          "capture_ci_high": 0.984336949448152,
+          "survival_rate": 0.040000000000000036
+        },
+        "scripted_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.96,
+          "avg_length": 376.07,
+          "avg_reward_chaser": 48.36045994872734,
+          "avg_reward_runner": -48.36045994872734,
+          "avg_distance": 154.62568119858096,
+          "capture_ci_low": 0.9016278276739262,
+          "capture_ci_high": 0.984336949448152,
+          "survival_rate": 0.040000000000000036
+        },
+        "chaser_vs_random": {
+          "episodes": 100,
+          "capture_rate": 0.86,
+          "avg_length": 389.15,
+          "avg_reward_chaser": 46.60308141248447,
+          "avg_reward_runner": -46.60308141248447,
+          "avg_distance": 127.65694101756095,
+          "capture_ci_low": 0.7786263961619276,
+          "capture_ci_high": 0.914737342455351,
+          "survival_rate": 0.14
+        },
+        "random_vs_runner": {
+          "episodes": 100,
+          "capture_rate": 0.1,
+          "avg_length": 953.79,
+          "avg_reward_chaser": -1.49718161578442,
+          "avg_reward_runner": 1.49718161578442,
+          "avg_distance": 378.8161085662078,
+          "capture_ci_low": 0.05522854161313613,
+          "capture_ci_high": 0.1743673043676654,
+          "survival_rate": 0.9
+        }
+      },
+      "scripted_pair": {
+        "episodes": 100,
+        "capture_rate": 1.0,
+        "avg_length": 404.42,
+        "avg_reward_chaser": 48.839294584269275,
+        "avg_reward_runner": -48.839294584269275,
+        "avg_distance": 186.01503195491975,
+        "capture_ci_low": 0.9630051925239981,
+        "capture_ci_high": 0.9999999999999999,
+        "survival_rate": 0.0
+      }
+    }
+  ]
+}

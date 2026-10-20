@@ -1,34 +1,48 @@
-# Default configuration for chaser-runner.
-# Override any subset of these keys in your own YAML and pass it with --config.
-
+# Policy decisions hold actions for env.action_repeat physics ticks.
 env:
-  world_size: 800.0      # size of the square (wrap-around) world
-  tickrate: 60           # physics steps per second (dt = 1 / tickrate)
-  max_acc: 300.0         # max acceleration an action of magnitude 1 produces
-  max_speed: 250.0       # runner speed cap
-  chaser_advantage: 1.2  # chaser's speed/accel multiplier (>1 makes capture possible)
-  friction: 0.1          # velocity damping per second
-  capture_radius: 25.0   # chaser wins when within this distance
-  timeout_steps: 1000    # episode ends (runner "wins") after this many steps
-
+  world_size: 800.0
+  tickrate: 60
+  max_acc: 300.0
+  max_speed: 250.0
+  chaser_advantage: 1.2
+  friction: 0.1
+  capture_radius: 25.0
+  timeout_steps: 1000
+  action_repeat: 4
+  distance_reward_scale: 100.0
+  capture_reward: 10.0
 agent:
-  hidden: 256            # width of the Q-network hidden layers
-  lr: 0.0001
+  algorithm: td3
+  hidden: 128
+  lr: 0.0003
   gamma: 0.99
-  sample_actions: 128    # candidate actions scored when acting
+  sample_actions: 128
   batch_size: 128
-  buffer_capacity: 200000
+  buffer_capacity: 50000
   target_update_freq: 400
-  target_samples: 32     # candidate actions used to estimate the Bellman max
+  target_samples: 32
   grad_clip: 10.0
-  min_buffer: 1000       # start learning only after this many transitions
-
+  min_buffer: 1000
+  start_steps: 1000
+  tau: 0.005
+  policy_delay: 2
+  policy_noise: 0.2
+  noise_clip: 0.5
 train:
   total_steps: 200000
-  train_iters_per_step: 2
+  train_iters_per_step: 1
   eps_start: 0.3
-  eps_final: 0.02
-  eps_decay_steps: 20000
+  eps_final: 0.05
+  eps_decay_steps: 100000
   log_interval: 100
   save_interval: 5000
   seed: 0
+  eval_interval: 10000
+  eval_episodes: 20
+  eval_seed: 10000
+  snapshot_interval: 2000
+  opponent_pool_size: 8
+  random_opponent_prob: 0.2
+  scripted_opponent_prob: 0.3
+  keep_checkpoints: 3
+  torch_threads: 1

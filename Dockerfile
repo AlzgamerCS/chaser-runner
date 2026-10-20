@@ -22,7 +22,5 @@ COPY src ./src
 COPY configs ./configs
 RUN pip install --no-cache-dir .
 
-COPY models ./models
-
 ENTRYPOINT ["chaser-runner"]
-CMD ["eval", "--episodes", "20"]
+CMD ["--help"]

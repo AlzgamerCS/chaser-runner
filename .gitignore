@@ -18,6 +18,7 @@ env/
 # Training artifacts
 # (.gitignore has no inline comments — keep patterns on their own lines)
 runs/
+evaluations/
 *.log
 # Trained model weights: retrainable, not versioned
 *.pth

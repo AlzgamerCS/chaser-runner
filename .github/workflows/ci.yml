@@ -7,7 +7,16 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: ubuntu-latest
+            python: "3.12"
+          - os: windows-latest
+            python: "3.14"
+    runs-on: ${{ matrix.os }}
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
@@ -16,7 +25,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
           cache: pip
 
       - name: Install CPU PyTorch

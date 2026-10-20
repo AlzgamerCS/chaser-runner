@@ -26,6 +26,7 @@ class ChaseEnv:
     def __init__(self, config: EnvConfig | None = None):
         self.cfg = config or EnvConfig()
         self.steps = 0
+        self._done = False
         self.rng = np.random.default_rng()
 
         self.ch_pos = np.zeros(2)
@@ -41,6 +42,7 @@ class ChaseEnv:
         if seed is not None:
             self.rng = np.random.default_rng(seed)
         self.steps = 0
+        self._done = False
         self._prev_dist = None
 
         size = self.cfg.world_size
@@ -63,6 +65,25 @@ class ChaseEnv:
         return self._get_state()
 
     def step(
+        self, action_chaser: np.ndarray, action_runner: np.ndarray
+    ) -> tuple[np.ndarray, tuple[float, float], bool, dict[str, Any]]:
+        """Hold actions for several ticks; time limits truncate, captures terminate."""
+        if self._done:
+            raise RuntimeError("Reset the environment after an episode ends")
+        for action in (action_chaser, action_runner):
+            if np.shape(action) != (ACTION_DIM,) or not np.isfinite(action).all():
+                raise ValueError("Actions must be finite vectors of shape (2,)")
+        total_ch = total_rn = 0.0
+        for _ in range(self.cfg.action_repeat):
+            state, (rch, rrn), done, info = self._physics_step(action_chaser, action_runner)
+            total_ch += rch
+            total_rn += rrn
+            if done:
+                break
+        self._done = done
+        return state, (total_ch, total_rn), done, info
+
+    def _physics_step(
         self, action_chaser: np.ndarray, action_runner: np.ndarray
     ) -> tuple[np.ndarray, tuple[float, float], bool, dict[str, Any]]:
         self.steps += 1
@@ -89,15 +110,15 @@ class ChaseEnv:
         prev = self._prev_dist if self._prev_dist is not None else dist
 
         # Shaped, zero-sum reward: chaser gains what the runner loses.
-        r_ch = (prev - dist) / cfg.world_size
+        r_ch = (prev - dist) / cfg.world_size * cfg.distance_reward_scale
         r_rn = -r_ch
 
         done = False
         info: dict[str, Any] = {}
         if dist <= cfg.capture_radius:
             done = True
-            r_ch += 1.0
-            r_rn -= 1.0
+            r_ch += cfg.capture_reward
+            r_rn -= cfg.capture_reward
             info["reason"] = "captured"
         elif self.steps >= cfg.timeout_steps:
             done = True
@@ -105,7 +126,28 @@ class ChaseEnv:
 
         self._prev_dist = dist
         info["distance"] = dist
+        info["terminated"] = info.get("reason") == "captured"
+        info["truncated"] = info.get("reason") == "timeout"
         return self._get_state(), (r_ch, r_rn), done, info
+
+    def state_dict(self) -> dict[str, Any]:
+        return {
+            "steps": self.steps,
+            "done": self._done,
+            "prev_dist": self._prev_dist,
+            "rng": self.rng.bit_generator.state,
+            **{
+                key: getattr(self, key).tolist() for key in ("ch_pos", "ch_vel", "rn_pos", "rn_vel")
+            },
+        }
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        self.steps = state["steps"]
+        self._done = state.get("done", False)
+        self._prev_dist = state["prev_dist"]
+        self.rng.bit_generator.state = state["rng"]
+        for key in ("ch_pos", "ch_vel", "rn_pos", "rn_vel"):
+            setattr(self, key, np.asarray(state[key], dtype=float))
 
     # ------------------------------------------------------------------ #
     # Geometry helpers

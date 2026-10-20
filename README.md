@@ -1,181 +1,191 @@
 # Chaser-Runner
 
-> Adversarial self-play reinforcement learning: a **chaser** learns to pursue and a **runner** learns to evade, on a wrap-around 2D world — both trained from scratch, at the same time, against each other.
+Adversarial reinforcement learning on a wrap-around 2D world: a **chaser** learns
+pursuit and a **runner** learns evasion. Both control continuous acceleration.
+TD3 is the default learner; the original sampled-action DQN remains available.
 
 <p align="center">
-  <img src="assets/demo.gif" alt="Trained chaser (red) pursuing runner (green) on a toroidal world" width="480">
+  <img src="assets/demo.gif" alt="Chaser and runner on a toroidal world" width="480">
 </p>
-
-<p align="center">
-  <a href="#quickstart">Quickstart</a> ·
-  <a href="#how-it-works">How it works</a> ·
-  <a href="#command-reference">Commands</a> ·
-  <a href="#project-layout">Layout</a>
-</p>
-
----
-
-## What is this?
-
-Two agents share the same continuous-control physics but have opposite goals. The
-chaser is rewarded for closing the distance (and gets a bonus for a capture); the
-runner is rewarded for opening it. Because they train **simultaneously**, each one
-is a moving target for the other — a small self-play arms race that produces
-surprisingly natural chasing and juking behaviour.
-
-- **Continuous actions.** Each agent outputs a 2D acceleration in `[-1, 1]²`.
-- **Sampling-based DQN.** Instead of a discrete action head, a `Q(s, a)` network
-  scores many *sampled* candidate actions and the best one is played. This keeps
-  the DQN machinery while handling a continuous action space.
-- **Toroidal world.** The arena wraps around at every edge, so the shortest path
-  between two agents may go *through* a wall.
-- **Runs, trains, and showcases.** Train with live TensorBoard curves, evaluate
-  over many episodes, watch a fullscreen live match, or record a GIF headlessly.
 
 ## Quickstart
 
 ```bash
-# 1. Install (editable, with dev tooling)
-pip install torch            # or the CUDA build for your platform
+pip install torch                 # choose the CUDA build if appropriate
 pip install -e ".[dev]"
 
-# 2. Train from scratch (Ctrl+C any time — models are saved on exit)
-chaser-runner train --steps 200000
+# Start a preserved, uniquely named experiment.
+chaser-runner train --run-name first --steps 50000
 
-# 3. Watch the trained agents in a live window
-chaser-runner play --fullscreen
+# Evaluate against the partner and fixed reference opponents, on held-out seeds.
+chaser-runner eval --checkpoint runs/first --benchmark --episodes 100 --seed 20000
 
-# 4. See how good they are
-chaser-runner eval --episodes 50
+# Watch or record the latest policies.
+chaser-runner play --checkpoint runs/first --fullscreen
+chaser-runner record --checkpoint runs/first --out assets/first.gif
 ```
 
-> Trained weights are not checked into the repo — run `train` first (it writes
-> `models/chaser_q.pth` and `models/runner_q.pth`), which `play`/`eval` then load.
+Training detects CUDA automatically; `--device cpu` forces CPU. Ctrl+C requests a
+stop after the current complete training step, then saves a resumable checkpoint.
+Weights are not checked into Git. The demo GIF shows trained TD3 policies.
 
-> **GPU:** training auto-detects CUDA. Pass `--device cpu` to force CPU.
-
-## Command reference
-
-All commands are subcommands of `chaser-runner` (see `chaser-runner <cmd> -h`).
-
-| Command  | What it does                                              | Key flags |
-| -------- | --------------------------------------------------------- | --------- |
-| `train`  | Self-play training loop with TensorBoard logging          | `--steps`, `--config`, `--render`, `--fullscreen`, `--resume-chaser/-runner`, `--no-log` |
-| `eval`   | Roll out greedy policies, report capture rate & rewards   | `--episodes`, `--chaser`, `--runner` |
-| `play`   | Watch trained agents in a live Pygame window              | `--fullscreen`, `--episodes` |
-| `record` | Render a GIF **headlessly** (no display needed)           | `--out`, `--episodes`, `--fps`, `--stride` |
-
-### Train, retrain, and experiment
-
-Everything is driven by [`configs/default.yaml`](configs/default.yaml). To try a
-variation, copy it, edit the physics or learner, and point `train` at it:
+## Continue training or start a new experiment
 
 ```bash
-cp configs/default.yaml configs/fast_runner.yaml
-# edit e.g. env.max_speed, agent.lr, train.eps_decay_steps ...
-chaser-runner train --config configs/fast_runner.yaml --run-name fast_runner
+# The target is 100,000 decisions in total, including the first 50,000.
+chaser-runner train --resume runs/first --steps 100000
+
+# A separate run with different settings.
+chaser-runner train --config configs/default.yaml --run-name another
+
+# Watch independently selected best policies together.
+chaser-runner play --chaser runs/first/policies/best_chaser.pt \
+                   --runner runs/first/policies/best_runner.pt
 ```
 
-**Continue training** from existing weights instead of starting over:
+`--steps` always means the **total target number of policy decisions**, including
+resumed progress. Each decision holds an action for `env.action_repeat` physics
+ticks (default 4). Episode lengths are reported in physics ticks. These step counts
+are consequently different from older versions of this project.
 
-```bash
-chaser-runner train --resume-chaser models/chaser_q.pth \
-                     --resume-runner models/runner_q.pth --steps 50000
+A full resume restores the saved configuration and run directory. It accepts a
+run directory or its latest `checkpoints/step_*.pt` file. Existing run names and
+resuming older checkpoints over a newer run are rejected. Preserve the complete
+run directory when moving or archiving an experiment. A process lock prevents two
+training processes from writing the same run.
+
+`--warm-start-chaser` and `--warm-start-runner` load policies into a **new** run with
+fresh optimizer, replay, and exploration state. The old `--resume-chaser` and
+`--resume-runner` flags are aliases for these weight-only warm starts; they do not
+perform a full resume. Legacy `.pth` Q-network weights need an explicit matching
+configuration, including `agent.algorithm: dqn`, the original hidden width, and
+original physics/reward settings. New policy bundles contain their configuration.
+
+## What is preserved?
+
+```text
+runs/first/
+  config.json                  # effective configuration, including CLI overrides
+  metadata.json                # initial Git revision, runtime and installed packages
+  source.zip                   # actual package source and pyproject, including local edits
+  sessions/<id>/               # config, runtime and source for each training invocation
+  metrics.jsonl                # append-only metrics; session markers distinguish resumes
+  status.json                  # running, interrupted, completed, or failed
+  latest.json                  # pointer to the most recent complete training checkpoint
+  checkpoints/step_*.pt        # both learners and the entire training state
+  policies/initial.pt          # initial policies, including any warm-start inputs
+  policies/latest.pt           # small, self-contained inference bundle for both roles
+  policies/best_chaser.pt      # pair at the chaser's best validation step
+  policies/best_runner.pt      # pair at the runner's best validation step
+  evaluations/step_*.json      # repeatable validation benchmark results
+  tensorboard/                 # optional live curves
 ```
 
-### Watch the training curves
+Full checkpoints include online and target networks, optimizers, replay contents
+and write positions, learner counters, exploration progress, opponent snapshots,
+current opponent, in-flight episode, and Python/NumPy/PyTorch/CUDA RNG states.
+Checkpoints use atomic replacement, and the latest pointer is published before
+old checkpoints are pruned. The last `train.keep_checkpoints` full checkpoints are
+kept (default 3). Best policy bundles are retained independently; they are
+inference/warm-start artifacts, not full training checkpoints.
+
+Resume is regression-tested to match uninterrupted training exactly on the same
+CPU software stack. Changing device, package versions, or source may change the
+trajectory; every invocation preserves its own runtime and source. Resume defaults
+to the checkpoint's device; pass `--device cpu` explicitly to migrate a CUDA run.
+An unexpected failure keeps the previous completed checkpoint. A hard process kill
+can lose work since that checkpoint, and `status.json` can remain `running`.
 
 ```bash
 tensorboard --logdir runs
 ```
 
-You get live `reward`, `loss`, `distance`, `episode length`, and `capture` curves —
-screenshot these for your write-up.
+`--no-log` disables TensorBoard while preserving metrics and all other artifacts.
 
-### Record a demo GIF
+## Learning and evaluation
 
-```bash
-chaser-runner record --out assets/demo.gif --episodes 3
-```
+TD3 uses a deterministic actor, twin Q critics, clipped target-action noise,
+delayed actor updates, and softly updated target networks. The optional DQN uses
+sampled continuous actions with Double DQN targets and Huber loss.
 
-This uses SDL's dummy video driver, so it works over SSH, in Docker, and in CI.
+Only one role learns in each episode. Its opponent is held fixed for that episode
+and sampled from a bounded historical policy pool (50% by default), a scripted
+pursuit/evasion controller (30%), or a random policy (20%). The learner roles
+alternate between episodes. This provides stable opponents within rollouts and
+practice against reference strategies as the historical population evolves.
 
-## How it works
+The six-dimensional state contains normalized shortest toroidal displacement,
+chaser velocity, and runner velocity. Rewards are zero-sum: scaled distance
+progress plus a capture bonus. Repeating actions gives acceleration time to affect
+motion and extends the effective discount horizon. A capture is terminal; the
+physics time limit cuts off a rollout and counts as runner survival in evaluation,
+but the critic still bootstraps through this truncation. There is no timeout bonus.
 
-```
-             ┌──────────────┐   action_ch    ┌──────────────┐
-   state ───►│ Chaser agent │───────────────►│              │
-     ▲       └──────────────┘                 │   ChaseEnv   │──► reward_ch, reward_rn
-     │       ┌──────────────┐   action_rn     │  (toroidal)  │      next state, done
-     └───────│ Runner agent │───────────────►│              │
-             └──────────────┘                 └──────────────┘
-```
+Every `train.eval_interval` decisions, training runs a benchmark with exploration
+disabled. Both environment resets and action sampling are seeded. Evaluation
+preserves training RNG state and never adds data to replay. The matchups are:
 
-**State** (6-dim, relative & normalized): `[rel_disp(2), chaser_vel(2),
-runner_vel(2)]`, where `rel_disp` is the shortest wrap-around vector from chaser to
-runner. On a homogeneous toroidal world only *relative* geometry matters, so
-absolute position is deliberately dropped and every component is scaled to roughly
-`[-1, 1]` — this is what makes the task learnable.
+- Current chaser versus current runner.
+- Current chaser versus scripted and random runners.
+- Scripted and random chasers versus the current runner.
 
-**Reward** is zero-sum on the shaped distance term: the chaser earns
-`(prev_dist − dist) / world_size` each step, the runner earns its negation. Capture
-adds `+1` for the chaser and `−1` for the runner and ends the episode; reaching the
-step limit ends it as a runner "win".
-
-**Game balance.** The chaser is slightly faster (`env.chaser_advantage`, default
-`1.2`). Equal speed on a torus makes a competent runner *uncatchable*, so the
-chaser needs an edge to ever learn to win.
-
-**Learning.** Each agent is an independent [`DQNAgent`](src/chaser_runner/agent.py)
-with its own replay buffer and target network. Since actions are continuous, both
-the acting policy and the Bellman `max` are approximated by scoring uniformly
-sampled candidate actions with `Q(s, a)` and taking the best.
-
-## Project layout
-
-```
-src/chaser_runner/
-├── config.py         # typed dataclass config, loadable from YAML
-├── env.py            # ChaseEnv — pure toroidal physics (no rendering)
-├── networks.py       # QNetwork: Q(s, a) → scalar value
-├── replay.py         # experience replay buffer
-├── agent.py          # DQNAgent: sampling-based continuous-action DQN
-├── logging_utils.py  # pluggable metric logging (TensorBoard / null)
-├── trainer.py        # self-play loop + evaluation
-├── render.py         # Pygame rendering: interactive, fullscreen, or headless
-└── cli.py            # `chaser-runner` entry point
-configs/default.yaml  # all hyperparameters live here
-tests/                # pytest suite for env, replay, agent, config
-```
-
-## Development
+Results include capture/survival rates, a Wilson 95% interval for capture rate,
+mean episode length, mean distance, and both returns. Each role's best policies
+are selected by mean win rate across its two fixed opponents; distance breaks
+chaser ties, while survival duration and distance break runner ties. This is
+validation selection. Use a different seed range for final evaluation and repeat
+training with several seeds before claiming an improvement. A high paired capture
+rate alone does not establish which role improved, and benchmark performance can
+fluctuate during self-play.
 
 ```bash
-pip install -e ".[dev]"
-pre-commit install          # auto-run ruff + formatting on commit
-pytest                      # run the test suite
-ruff check . && ruff format --check .
+# Inspect a particular selected pair on new episodes.
+chaser-runner eval --checkpoint runs/first/policies/best_chaser.pt \
+                  --benchmark --episodes 100 --seed 20000 --out evaluations/first.json
+
+# Cross-play selected policies, or substitute a baseline.
+chaser-runner eval --chaser runs/first/policies/best_chaser.pt \
+                  --runner runs/first/policies/best_runner.pt --episodes 100
+chaser-runner eval --checkpoint runs/first --runner scripted --episodes 100
 ```
 
-CI (GitHub Actions) runs the linter, format check, and tests on every push and PR.
+Standalone evaluation always writes JSON. A policy bundle supplies architecture
+and environment settings, and conflicting configurations are rejected. `scripted`,
+`random`, and `stationary` can be used as either role's policy source.
 
-## Docker (headless)
+## Configuration and development
 
-The image runs training, evaluation, and GIF recording without a display. (The
-live `play` window needs a display, so run that natively.)
+[`configs/default.yaml`](configs/default.yaml) lists all settings. Partial YAML
+files override defaults; unknown fields and invalid numeric settings fail early.
+For the original learner, set `agent.algorithm: dqn`. Fields `sample_actions`,
+`target_samples`, and `target_update_freq` apply only to DQN; `tau`, `policy_delay`,
+`policy_noise`, and `noise_clip` apply to TD3. TD3 interprets the exploration
+schedule as Gaussian action-noise standard deviation; DQN uses an epsilon-random
+probability. Each learner first collects `agent.start_steps` random actions.
+
+```bash
+pytest
+ruff check .
+ruff format --check .
+```
+
+Tests cover physics, replay, actual TD3 learning on a known continuous objective,
+evaluation isolation, exact training continuation for both algorithms, checkpoint
+failure handling and retention, process locking, and CLI train/eval/GIF workflows.
+See [training notes](docs/training.md) for the diagnosis and validation limits.
+
+## Docker
 
 ```bash
 docker build -t chaser-runner .
-docker run --rm chaser-runner eval --episodes 20
-docker run --rm -v "$PWD/assets:/app/assets" chaser-runner record --out assets/demo.gif
+docker run --rm -v "$PWD/runs:/app/runs" chaser-runner train --run-name docker-first --steps 50000
+docker run --rm -v "$PWD/runs:/app/runs" chaser-runner eval --checkpoint runs/docker-first --benchmark
 ```
 
-## Roadmap ideas
-
-- Egocentric per-agent state (each agent sees the world from its own frame)
-- Prioritized experience replay; DDPG/TD3-style deterministic actors
-- Multiple chasers or runners (team pursuit-evasion)
-- Optional MLflow backend behind the existing `MetricLogger` interface
+The image starts with command help; it does not assume pretrained models exist.
+Training, evaluation, and recording are headless. Use native `play` for a live window.
+Rendering uses pygame-ce, which retains the `pygame` import API and supplies wheels
+for newer Python versions.
 
 ## License
 

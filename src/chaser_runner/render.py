@@ -113,7 +113,7 @@ class Renderer:
             return
         self._pg.display.flip()
         if self._clock is not None:
-            self._clock.tick(self.env.cfg.tickrate)
+            self._clock.tick(self.env.cfg.tickrate / self.env.cfg.action_repeat)
 
     def frame(self) -> np.ndarray:
         """Return the current surface as an ``(H, W, 3)`` uint8 RGB array."""

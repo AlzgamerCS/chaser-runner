@@ -28,3 +28,23 @@ class QNetwork(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         return self.fc3(x)
+
+
+class Actor(nn.Module):
+    """Deterministic continuous policy with bounded accelerations."""
+
+    def __init__(self, state_dim: int = STATE_DIM, action_dim: int = ACTION_DIM, hidden: int = 128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(state_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, action_dim),
+            nn.Tanh(),
+        )
+        nn.init.uniform_(self.net[-2].weight, -0.003, 0.003)
+        nn.init.zeros_(self.net[-2].bias)
+
+    def forward(self, state: torch.Tensor) -> torch.Tensor:
+        return self.net(state)
